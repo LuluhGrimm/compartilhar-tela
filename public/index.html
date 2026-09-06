@@ -76,7 +76,10 @@
             border: 2px solid #444;
             border-radius: 12px;
             margin-top: 20px;
+            aspect-ratio: 16 / 9;
+            object-fit: contain;
         }
+
     </style>
 </head>
 
@@ -132,12 +135,45 @@
         muted>
     </video>
 
+    <br>
+
+<button id="telaCheia">
+    ⛶ Tela cheia
+</button>
+
 </div>
 
 
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
+    const botaoTelaCheia =
+    document.getElementById("telaCheia");
+
+botaoTelaCheia.onclick = async () => {
+
+    try {
+
+        if (video.requestFullscreen) {
+
+            await video.requestFullscreen();
+
+        } else if (video.webkitRequestFullscreen) {
+
+            video.webkitRequestFullscreen();
+
+        }
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao entrar em tela cheia:",
+            erro
+        );
+
+    }
+
+};
 
 const socket = io();
 
