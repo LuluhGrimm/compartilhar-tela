@@ -1,521 +1,434 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 
 <head>
+    <meta charset="UTF-8">
 
-<meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <title>Compartilhar Tela</title>
 
-<title>Compartilhar Tela</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
+        body {
+            margin: 0;
+            background: #0f0f0f;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
-<style>
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+            padding: 30px;
+            text-align: center;
+        }
 
-* {
-    box-sizing: border-box;
-}
+        h1 {
+            margin-bottom: 8px;
+        }
 
-body {
-    margin: 0;
-    background: #0f0f0f;
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
-}
+        .subtitulo {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
 
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: auto;
-    padding: 30px;
-    text-align: center;
-}
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
 
-h1 {
-    margin-bottom: 8px;
-}
+        #criar {
+            background: #23a559;
+            color: white;
+        }
 
-.subtitulo {
-    color: #aaa;
-    margin-bottom: 30px;
-}
+        #compartilhar {
+            background: #5865f2;
+            color: white;
+        }
 
-button {
-    border: none;
-    border-radius: 8px;
-    padding: 12px 20px;
-    margin: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
+        #parar {
+            background: #da373c;
+            color: white;
+        }
 
-#criar {
-    background: #23a559;
-    color: white;
-}
+        #copiar,
+        #telaCheia,
+        #ativarSom {
+            background: #404249;
+            color: white;
+        }
 
-#compartilhar {
-    background: #5865f2;
-    color: white;
-}
+        #linkBox {
+            display: none;
+            background: #1e1f22;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 700px;
+            margin: 20px auto;
+        }
 
-#parar {
-    background: #da373c;
-    color: white;
-}
+        #linkSala {
+            color: #b5bac1;
+            word-break: break-all;
+        }
 
-#copiar,
-#telaCheia,
-#ativarSom {
-    background: #404249;
-    color: white;
-}
+        #status {
+            color: #b5bac1;
+            margin: 20px;
+        }
 
-#linkBox {
-    display: none;
-    background: #1e1f22;
-    padding: 20px;
-    border-radius: 12px;
-    max-width: 700px;
-    margin: 20px auto;
-}
+        .botoes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
 
-#linkSala {
-    color: #b5bac1;
-    word-break: break-all;
-}
+        .video-container {
+            width: 100%;
+            background: black;
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
 
-#status {
-    color: #b5bac1;
-    margin: 20px;
-}
+        video {
+            width: 100%;
+            display: block;
+            background: black;
+            aspect-ratio: 16 / 9;
+            object-fit: contain;
+        }
 
-.botoes {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 5px;
-}
+        #modalFontes {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
 
-.video-container {
-    width: 100%;
-    background: black;
-    border: 1px solid #333;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-top: 20px;
-}
+        .modal-conteudo {
+            width: min(1000px, 94vw);
+            max-height: 88vh;
+            overflow-y: auto;
+            background: #1e1f22;
+            padding: 25px;
+            border-radius: 15px;
+        }
 
-video {
-    width: 100%;
-    display: block;
-    background: black;
-    aspect-ratio: 16 / 9;
-    object-fit: contain;
-}
+        #listaFontes {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fill,
+                    minmax(220px, 1fr)
+                );
+            gap: 15px;
+            margin: 20px 0;
+        }
 
+        .fonte {
+            background: #2b2d31;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
 
-/* MODAL */
+        .fonte:hover {
+            border-color: #5865f2;
+        }
 
-#modalFontes {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.8);
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
+        .fonte img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: contain;
+            background: black;
+            border-radius: 7px;
+        }
 
-.modal-conteudo {
-    width: min(1000px, 94vw);
-    max-height: 88vh;
-    overflow-y: auto;
-    background: #1e1f22;
-    padding: 25px;
-    border-radius: 15px;
-}
+        .fonte-nome {
+            margin-top: 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
 
-#listaFontes {
-    display: grid;
-    grid-template-columns:
-        repeat(
-            auto-fill,
-            minmax(220px, 1fr)
-        );
-    gap: 15px;
-    margin: 20px 0;
-}
+        .configuracoes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
 
-.fonte {
-    background: #2b2d31;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    padding: 10px;
-    cursor: pointer;
-}
+        .config {
+            background: #2b2d31;
+            padding: 12px;
+            border-radius: 8px;
+        }
 
-.fonte:hover {
-    border-color: #5865f2;
-}
-
-.fonte img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: contain;
-    background: black;
-    border-radius: 7px;
-}
-
-.fonte-nome {
-    margin-top: 8px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.configuracoes {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.config {
-    background: #2b2d31;
-    padding: 12px;
-    border-radius: 8px;
-}
-
-select {
-    background: #111214;
-    color: white;
-    border: 1px solid #555;
-    padding: 7px;
-    border-radius: 5px;
-}
-
-</style>
-
+        select {
+            background: #111214;
+            color: white;
+            border: 1px solid #555;
+            padding: 7px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
-
 
 <body>
 
-
 <div class="container">
 
-<h1>
-    🖥️ Compartilhar Tela
-</h1>
+    <h1>
+        🖥️ Compartilhar Tela
+    </h1>
 
-<p class="subtitulo">
-
-    Compartilhamento em tempo real
-
-</p>
-
-
-<button id="criar">
-
-    Criar sala
-
-</button>
-
-
-<div id="linkBox">
-
-    <h3>
-        Sala criada
-    </h3>
-
-    <p>
-        Código:
-        <strong id="codigoSala">
-        </strong>
+    <p class="subtitulo">
+        Compartilhamento em tempo real
     </p>
 
-    <p id="linkSala">
-    </p>
-
-    <button id="copiar">
-        📋 Copiar link
+    <button id="criar">
+        Criar sala
     </button>
 
+    <div id="linkBox">
+
+        <h3>
+            Sala criada
+        </h3>
+
+        <p>
+            Código:
+            <strong id="codigoSala"></strong>
+        </p>
+
+        <p id="linkSala"></p>
+
+        <button id="copiar">
+            📋 Copiar link
+        </button>
+
+    </div>
+
+    <div class="botoes">
+
+        <button
+            id="compartilhar"
+            style="display:none;"
+        >
+            🖥️ Compartilhar tela
+        </button>
+
+        <button
+            id="parar"
+            style="display:none;"
+        >
+            ⏹ Parar transmissão
+        </button>
+
+        <button id="telaCheia">
+            ⛶ Tela cheia
+        </button>
+
+        <button
+            id="ativarSom"
+            style="display:none;"
+        >
+            🔊 Ativar som
+        </button>
+
+    </div>
+
+    <p id="status">
+        Preparando conexão...
+    </p>
+
+    <div class="video-container">
+
+        <video
+            id="video"
+            autoplay
+            playsinline
+            muted
+        ></video>
+
+    </div>
+
 </div>
-
-
-<div class="botoes">
-
-<button
-    id="compartilhar"
-    style="display:none;"
->
-    🖥️ Compartilhar tela
-</button>
-
-
-<button
-    id="parar"
-    style="display:none;"
->
-    ⏹ Parar transmissão
-</button>
-
-
-<button id="telaCheia">
-    ⛶ Tela cheia
-</button>
-
-
-<button
-    id="ativarSom"
-    style="display:none;"
->
-    🔊 Ativar som
-</button>
-
-</div>
-
-
-<p id="status">
-
-    Crie uma sala para começar.
-
-</p>
-
-
-<div class="video-container">
-
-<video
-    id="video"
-    autoplay
-    playsinline
-    muted
->
-</video>
-
-</div>
-
-
-</div>
-
 
 
 <div id="modalFontes">
 
-<div class="modal-conteudo">
+    <div class="modal-conteudo">
 
-<h2>
-    Compartilhar sua tela
-</h2>
+        <h2>
+            Compartilhar sua tela
+        </h2>
 
-<p>
-    Escolha uma tela ou aplicativo.
-</p>
+        <p>
+            Escolha uma tela ou aplicativo.
+        </p>
 
+        <div class="configuracoes">
 
-<div class="configuracoes">
+            <div class="config">
 
-<div class="config">
+                Qualidade
 
-Qualidade
+                <select id="qualidade">
 
-<select id="qualidade">
+                    <option value="720">
+                        720p
+                    </option>
 
-<option value="720">
-    720p
-</option>
+                    <option
+                        value="1080"
+                        selected
+                    >
+                        1080p
+                    </option>
 
-<option
-    value="1080"
-    selected
->
-    1080p
-</option>
+                </select>
 
-</select>
+            </div>
 
-</div>
+            <div class="config">
 
+                FPS
 
-<div class="config">
+                <select id="fps">
 
-FPS
+                    <option
+                        value="30"
+                        selected
+                    >
+                        30 FPS
+                    </option>
 
-<select id="fps">
+                    <option value="60">
+                        60 FPS
+                    </option>
 
-<option
-    value="30"
-    selected
->
-    30 FPS
-</option>
+                </select>
 
-<option value="60">
-    60 FPS
-</option>
+            </div>
 
-</select>
+            <div class="config">
 
-</div>
+                <label>
 
+                    <input
+                        type="checkbox"
+                        id="usarAudio"
+                        checked
+                    >
 
-<div class="config">
+                    Áudio do sistema
 
-<label>
+                </label>
 
-<input
-    type="checkbox"
-    id="usarAudio"
-    checked
->
+            </div>
 
-Áudio do sistema
+        </div>
 
-</label>
+        <div id="listaFontes"></div>
 
-</div>
+        <button id="fecharSeletor">
+            Cancelar
+        </button>
 
-</div>
-
-
-<div id="listaFontes">
-</div>
-
-
-<button id="fecharSeletor">
-
-    Cancelar
-
-</button>
+    </div>
 
 </div>
-
-</div>
-
 
 
 <script src="/socket.io/socket.io.js"></script>
 
-
 <script>
-
-
-/*
-==============================
-SERVIDOR PÚBLICO
-==============================
-*/
 
 const SERVIDOR_PUBLICO =
     "https://compartilhar-tela-ic01.onrender.com";
+
+
+const video =
+    document.getElementById("video");
+
+const criar =
+    document.getElementById("criar");
+
+const compartilhar =
+    document.getElementById("compartilhar");
+
+const parar =
+    document.getElementById("parar");
+
+const telaCheia =
+    document.getElementById("telaCheia");
+
+const ativarSom =
+    document.getElementById("ativarSom");
+
+const statusTexto =
+    document.getElementById("status");
+
+const linkBox =
+    document.getElementById("linkBox");
+
+const codigoSala =
+    document.getElementById("codigoSala");
+
+const linkSala =
+    document.getElementById("linkSala");
+
+const copiar =
+    document.getElementById("copiar");
+
+const modalFontes =
+    document.getElementById("modalFontes");
+
+const listaFontes =
+    document.getElementById("listaFontes");
 
 
 const estouNoElectron =
     !!window.electronAPI;
 
 
-/*
-No Electron usamos o Render.
-
-No navegador do amigo,
-também usamos o Render.
-*/
-
-const socket =
-    io(
-        SERVIDOR_PUBLICO,
-        {
-            transports: [
-                "websocket",
-                "polling"
-            ]
-        }
-    );
-
-
-
-const video =
-    document.getElementById(
-        "video"
-    );
-
-const criar =
-    document.getElementById(
-        "criar"
-    );
-
-const compartilhar =
-    document.getElementById(
-        "compartilhar"
-    );
-
-const parar =
-    document.getElementById(
-        "parar"
-    );
-
-const telaCheia =
-    document.getElementById(
-        "telaCheia"
-    );
-
-const ativarSom =
-    document.getElementById(
-        "ativarSom"
-    );
-
-const statusTexto =
-    document.getElementById(
-        "status"
-    );
-
-const linkBox =
-    document.getElementById(
-        "linkBox"
-    );
-
-const codigoSala =
-    document.getElementById(
-        "codigoSala"
-    );
-
-const linkSala =
-    document.getElementById(
-        "linkSala"
-    );
-
-const copiar =
-    document.getElementById(
-        "copiar"
-    );
-
-const modalFontes =
-    document.getElementById(
-        "modalFontes"
-    );
-
-const listaFontes =
-    document.getElementById(
-        "listaFontes"
-    );
-
-
 let sala = "";
 
-let souTransmissor = false;
+let souTransmissor =
+    false;
 
-let streamLocal = null;
+let streamLocal =
+    null;
 
-let peer = null;
+let peer =
+    null;
 
-let candidatosPendentes = [];
+let socketConectado =
+    false;
 
+let candidatosPendentes =
+    [];
 
 
 const configuracaoWebRTC = {
@@ -537,54 +450,164 @@ const configuracaoWebRTC = {
 };
 
 
+/*
+====================================
+SOCKET.IO
+
+IMPORTANTE:
+autoConnect fica desligado
+até todos os eventos estarem prontos.
+====================================
+*/
+
+const socket =
+    io(
+        SERVIDOR_PUBLICO,
+        {
+
+            autoConnect:
+                false,
+
+            transports: [
+                "polling",
+                "websocket"
+            ],
+
+            reconnection:
+                true,
+
+            reconnectionAttempts:
+                Infinity,
+
+            reconnectionDelay:
+                1500,
+
+            reconnectionDelayMax:
+                5000,
+
+            timeout:
+                30000
+
+        }
+    );
+
 
 socket.on(
     "connect",
     () => {
 
+        socketConectado =
+            true;
+
+
         console.log(
-            "Socket conectado:",
+            "SOCKET CONECTADO:",
             socket.id
         );
+
+
+        if (sala) {
+
+            socket.emit(
+                "entrar-sala",
+                sala
+            );
+
+
+            if (
+                souTransmissor
+            ) {
+
+                statusTexto.innerText =
+                    "🟢 Conectado. Sala pronta.";
+
+            }
+            else {
+
+                statusTexto.innerText =
+                    "🟢 Conectado. Aguardando transmissão...";
+
+            }
+
+        }
+        else {
+
+            statusTexto.innerText =
+                "🟢 Conectado. Crie uma sala para começar.";
+
+        }
 
     }
 );
 
+
+socket.on(
+    "disconnect",
+    motivo => {
+
+        socketConectado =
+            false;
+
+
+        console.log(
+            "Socket desconectado:",
+            motivo
+        );
+
+
+        statusTexto.innerText =
+            "Reconectando ao servidor...";
+
+    }
+);
 
 
 socket.on(
     "connect_error",
     erro => {
 
+        socketConectado =
+            false;
+
+
         console.error(
-            "Erro Socket:",
-            erro
+            "Erro ao conectar Socket:",
+            erro.message
         );
 
+
         statusTexto.innerText =
-            "Falha ao conectar ao servidor.";
+            "Tentando conectar ao servidor...";
 
     }
 );
 
 
-
 /*
-==============================
-ENTRAR PELO LINK
-==============================
+Somente AGORA começa a conexão.
 */
 
-const parametros =
+statusTexto.innerText =
+    "Conectando ao servidor...";
+
+socket.connect();
+
+
+
+/*
+====================================
+ENTRAR EM SALA PELO LINK
+====================================
+*/
+
+const parametrosURL =
     new URLSearchParams(
         window.location.search
     );
 
 
 const salaDoLink =
-    parametros.get(
-        "sala"
-    );
+    parametrosURL.get("sala");
 
 
 if (salaDoLink) {
@@ -595,12 +618,6 @@ if (salaDoLink) {
 
     souTransmissor =
         false;
-
-
-    socket.emit(
-        "entrar-sala",
-        sala
-    );
 
 
     criar.style.display =
@@ -627,21 +644,41 @@ if (salaDoLink) {
         "inline-block";
 
 
-    statusTexto.innerText =
-        "Aguardando transmissão...";
+    if (
+        socket.connected
+    ) {
+
+        socket.emit(
+            "entrar-sala",
+            sala
+        );
+
+    }
 
 }
 
 
 
 /*
-==============================
+====================================
 CRIAR SALA
-==============================
+====================================
 */
 
 criar.onclick =
 () => {
+
+    if (
+        !socketConectado
+    ) {
+
+        statusTexto.innerText =
+            "Ainda conectando. Aguarde alguns segundos.";
+
+        return;
+
+    }
+
 
     sala =
         Math.random()
@@ -664,20 +701,14 @@ criar.onclick =
         sala;
 
 
-    /*
-    IMPORTANTE:
-    o link enviado ao amigo
-    sempre é o endereço público.
-    */
-
-    const linkPublico =
+    const link =
         SERVIDOR_PUBLICO
         + "/?sala="
         + sala;
 
 
     linkSala.innerText =
-        linkPublico;
+        link;
 
 
     linkBox.style.display =
@@ -693,16 +724,16 @@ criar.onclick =
 
 
     statusTexto.innerText =
-        "Sala criada. Envie o link para quem vai assistir.";
+        "🟢 Sala criada. Envie o link.";
 
 };
 
 
 
 /*
-==============================
+====================================
 COPIAR LINK
-==============================
+====================================
 */
 
 copiar.onclick =
@@ -745,9 +776,9 @@ async () => {
 
 
 /*
-==============================
-COMPARTILHAR
-==============================
+====================================
+BOTÃO COMPARTILHAR
+====================================
 */
 
 compartilhar.onclick =
@@ -771,9 +802,9 @@ async () => {
 
 
 /*
-==============================
-SELETOR ELECTRON
-==============================
+====================================
+LISTAR JANELAS DO ELECTRON
+====================================
 */
 
 async function abrirSeletorElectron() {
@@ -834,9 +865,7 @@ async function abrirSeletorElectron() {
                         );
 
 
-                    modalFontes
-                        .style
-                        .display =
+                    modalFontes.style.display =
                         "none";
 
 
@@ -862,7 +891,7 @@ async function abrirSeletorElectron() {
 
 
         listaFontes.innerHTML =
-            "Erro ao carregar janelas.";
+            "Erro ao carregar as janelas.";
 
     }
 
@@ -871,9 +900,9 @@ async function abrirSeletorElectron() {
 
 
 /*
-==============================
+====================================
 CAPTURA ELECTRON
-==============================
+====================================
 */
 
 async function iniciarElectron() {
@@ -900,7 +929,7 @@ async function iniciarElectron() {
             );
 
 
-        const audio =
+        const usarAudio =
             document
                 .getElementById(
                     "usarAudio"
@@ -940,6 +969,7 @@ async function iniciarElectron() {
                         frameRate: {
                             ideal:
                                 fps,
+
                             max:
                                 fps
                         }
@@ -947,7 +977,7 @@ async function iniciarElectron() {
                     },
 
                     audio:
-                        audio
+                        usarAudio
 
                 });
 
@@ -963,7 +993,7 @@ async function iniciarElectron() {
 
 
         statusTexto.innerText =
-            "Não foi possível iniciar a transmissão.";
+            "Erro ao iniciar a transmissão.";
 
     }
 
@@ -972,9 +1002,9 @@ async function iniciarElectron() {
 
 
 /*
-==============================
-NAVEGADOR
-==============================
+====================================
+CAPTURA PELO NAVEGADOR
+====================================
 */
 
 async function compartilharNavegador() {
@@ -989,16 +1019,21 @@ async function compartilharNavegador() {
                     video: {
 
                         width: {
-                            ideal: 1920
+                            ideal:
+                                1920
                         },
 
                         height: {
-                            ideal: 1080
+                            ideal:
+                                1080
                         },
 
                         frameRate: {
-                            ideal: 30,
-                            max: 30
+                            ideal:
+                                30,
+
+                            max:
+                                30
                         }
 
                     },
@@ -1029,9 +1064,9 @@ async function compartilharNavegador() {
 
 
 /*
-==============================
-INICIAR WEBRTC
-==============================
+====================================
+PREPARA TRANSMISSÃO
+====================================
 */
 
 async function prepararTransmissao() {
@@ -1049,7 +1084,9 @@ async function prepararTransmissao() {
             .getVideoTracks()[0];
 
 
-    if (trackVideo) {
+    if (
+        trackVideo
+    ) {
 
         trackVideo.contentHint =
             "detail";
@@ -1080,16 +1117,13 @@ async function prepararTransmissao() {
             try {
 
                 const parametros =
-                    sender
-                        .getParameters();
+                    sender.getParameters();
 
 
                 if (
                     !parametros.encodings
                     ||
-                    parametros
-                        .encodings
-                        .length === 0
+                    parametros.encodings.length === 0
                 ) {
 
                     parametros.encodings =
@@ -1138,7 +1172,9 @@ async function prepararTransmissao() {
         "🟢 Transmitindo";
 
 
-    if (trackVideo) {
+    if (
+        trackVideo
+    ) {
 
         trackVideo.onended =
             pararTransmissao;
@@ -1150,14 +1186,16 @@ async function prepararTransmissao() {
 
 
 /*
-==============================
-CRIAR PEER
-==============================
+====================================
+PEER CONNECTION
+====================================
 */
 
 function criarPeer() {
 
-    if (peer) {
+    if (
+        peer
+    ) {
 
         peer.close();
 
@@ -1219,7 +1257,7 @@ function criarPeer() {
                 () => {
 
                     statusTexto.innerText =
-                        "Clique em Ativar som para assistir.";
+                        "Clique em Ativar som.";
 
                 }
             );
@@ -1231,7 +1269,7 @@ function criarPeer() {
     () => {
 
         console.log(
-            "Estado WebRTC:",
+            "WebRTC:",
             peer.connectionState
         );
 
@@ -1255,7 +1293,7 @@ function criarPeer() {
         ) {
 
             statusTexto.innerText =
-                "Falha na conexão WebRTC.";
+                "Falha na conexão da transmissão.";
 
         }
 
@@ -1266,20 +1304,21 @@ function criarPeer() {
 
 
 /*
-==============================
+====================================
 OFFER
-==============================
+====================================
 */
 
 async function enviarOffer() {
 
-    if (!peer)
+    if (
+        !peer
+    )
         return;
 
 
     const offer =
-        await peer
-            .createOffer();
+        await peer.createOffer();
 
 
     await peer
@@ -1306,9 +1345,9 @@ async function enviarOffer() {
 
 
 /*
-==============================
+====================================
 VIEWER ENTROU
-==============================
+====================================
 */
 
 socket.on(
@@ -1333,9 +1372,9 @@ socket.on(
 
 
 /*
-==============================
+====================================
 RECEBER OFFER
-==============================
+====================================
 */
 
 socket.on(
@@ -1363,8 +1402,7 @@ socket.on(
 
 
         const answer =
-            await peer
-                .createAnswer();
+            await peer.createAnswer();
 
 
         await peer
@@ -1392,16 +1430,18 @@ socket.on(
 
 
 /*
-==============================
+====================================
 RECEBER ANSWER
-==============================
+====================================
 */
 
 socket.on(
     "answer",
     async answer => {
 
-        if (!peer)
+        if (
+            !peer
+        )
             return;
 
 
@@ -1421,16 +1461,18 @@ socket.on(
 
 
 /*
-==============================
-ICE
-==============================
+====================================
+ICE CANDIDATES
+====================================
 */
 
 socket.on(
     "ice-candidate",
     async candidate => {
 
-        if (!candidate)
+        if (
+            !candidate
+        )
             return;
 
 
@@ -1463,7 +1505,7 @@ socket.on(
         catch (erro) {
 
             console.error(
-                "Erro ICE:",
+                "ICE:",
                 erro
             );
 
@@ -1473,10 +1515,11 @@ socket.on(
 );
 
 
-
 async function adicionarPendentes() {
 
-    if (!peer)
+    if (
+        !peer
+    )
         return;
 
 
@@ -1514,9 +1557,9 @@ async function adicionarPendentes() {
 
 
 /*
-==============================
+====================================
 ATIVAR SOM
-==============================
+====================================
 */
 
 ativarSom.onclick =
@@ -1552,9 +1595,9 @@ async () => {
 
 
 /*
-==============================
-PARAR
-==============================
+====================================
+PARAR TRANSMISSÃO
+====================================
 */
 
 parar.onclick =
@@ -1581,7 +1624,9 @@ function pararTransmissao() {
     }
 
 
-    if (peer) {
+    if (
+        peer
+    ) {
 
         peer.close();
 
@@ -1595,10 +1640,16 @@ function pararTransmissao() {
         null;
 
 
-    socket.emit(
-        "encerrar-transmissao",
+    if (
         sala
-    );
+    ) {
+
+        socket.emit(
+            "encerrar-transmissao",
+            sala
+        );
+
+    }
 
 
     parar.style.display =
@@ -1621,7 +1672,6 @@ function pararTransmissao() {
 }
 
 
-
 socket.on(
     "transmissao-encerrada",
     () => {
@@ -1639,9 +1689,9 @@ socket.on(
 
 
 /*
-==============================
+====================================
 TELA CHEIA
-==============================
+====================================
 */
 
 telaCheia.onclick =
@@ -1680,6 +1730,12 @@ async () => {
 
 
 
+/*
+====================================
+FECHAR SELETOR
+====================================
+*/
+
 document
     .getElementById(
         "fecharSeletor"
@@ -1692,9 +1748,7 @@ document
 
 };
 
-
 </script>
-
 
 </body>
 
