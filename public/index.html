@@ -323,14 +323,34 @@ async () => {
     try {
 
         streamLocal =
-            await navigator.mediaDevices
-                .getDisplayMedia({
+    await navigator.mediaDevices
+        .getDisplayMedia({
 
-                    video: true,
+            video: {
+                width: {
+                    ideal: 1920,
+                    max: 1920
+                },
 
-                    audio: false
+                height: {
+                    ideal: 1080,
+                    max: 1080
+                },
 
-                });
+                frameRate: {
+                    ideal: 30,
+                    max: 30
+                }
+            },
+
+            audio: false
+
+        });
+
+        const videoTrack =
+    streamLocal.getVideoTracks()[0];
+
+videoTrack.contentHint = "detail";
 
 
         video.srcObject =
@@ -341,15 +361,32 @@ async () => {
 
 
         streamLocal
-            .getTracks()
-            .forEach(track => {
+    .getTracks()
+    .forEach(track => {
 
-                peer.addTrack(
-                    track,
-                    streamLocal
-                );
+        const sender =
+            peer.addTrack(
+                track,
+                streamLocal
+            );
 
-            });
+        if (track.kind === "video") {
+
+            const parametros =
+                sender.getParameters();
+
+            if (!parametros.encodings) {
+                parametros.encodings = [{}];
+            }
+
+            parametros.encodings[0].maxBitrate =
+                6000000;
+
+            sender.setParameters(parametros)
+                .catch(console.error);
+        }
+
+    });
 
 
         const offer =
