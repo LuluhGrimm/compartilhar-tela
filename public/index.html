@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Compartilhar Tela</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+        }
+
+        #criar {
+            background: #28a745;
+            color: white;
+        }
+
+        #compartilhar {
+            background: #007bff;
+            color: white;
+        }
+
+        #copiar {
+            background: #555;
+            color: white;
+        }
+
+        #parar {
+            background: #dc3545;
+            color: white;
+        }
+
+        #linkBox {
+            display: none;
+            margin: 25px auto;
+            padding: 15px;
+            background: #222;
+            border-radius: 10px;
+            max-width: 700px;
+        }
+
+        #linkSala {
+            word-break: break-all;
+        }
+
+        #status {
+            margin: 20px;
+            color: #ccc;
+        }
+
+        video {
+            width: 100%;
+            max-width: 900px;
+            background: black;
+            border: 2px solid #444;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🖥️ Compartilhar Tela</h1>
+
+    <p>
+        Crie uma sala e envie o link para quem vai assistir.
+    </p>
+
+    <button id="criar">
+        Criar sala
+    </button>
+
+    <div id="linkBox">
+
+        <h3>Sala criada!</h3>
+
+        <p>
+            Código:
+            <strong id="codigoSala"></strong>
+        </p>
+
+        <p id="linkSala"></p>
+
+        <button id="copiar">
+            📋 Copiar link
+        </button>
+
+    </div>
+
+    <br>
+
+    <button id="compartilhar" style="display:none;">
+        🖥️ Compartilhar tela
+    </button>
+
+    <button id="parar" style="display:none;">
+        ⏹ Parar transmissão
+    </button>
+
+    <p id="status">
+        Crie ou entre em uma sala.
+    </p>
+
+    <video
+        id="video"
+        autoplay
+        playsinline
+        muted>
+    </video>
+
+</div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const socket = io();
+
+const video =
+    document.getElementById("video");
+
+const statusTexto =
+    document.getElementById("status");
+
+const criar =
+    document.getElementById("criar");
+
+const compartilhar =
+    document.getElementById("compartilhar");
+
+const parar =
+    document.getElementById("parar");
+
+const copiar =
+    document.getElementById("copiar");
+
+const linkBox =
+    document.getElementById("linkBox");
+
+const codigoSala =
+    document.getElementById("codigoSala");
+
+const linkSala =
+    document.getElementById("linkSala");
+
+
+let sala = "";
+let peer = null;
+let streamLocal = null;
+let souTransmissor = false;
+
+
+const config = {
+
+    iceServers: [
+
+        {
+            urls:
+                "stun:stun.l.google.com:19302"
+        }
+
+    ]
+
+};
+
+
+// Verifica se existe ?sala=XXXXX no link
+
+const parametros =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const salaDoLink =
+    parametros.get("sala");
+
+
+if (salaDoLink) {
+
+    sala = salaDoLink;
+
+    souTransmissor = false;
+
+    socket.emit(
+        "entrar-sala",
+        sala
+    );
+
+    criar.style.display =
+        "none";
+
+    compartilhar.style.display =
+        "none";
+
+    linkBox.style.display =
+        "block";
+
+    codigoSala.innerText =
+        sala;
+
+    linkSala.innerText =
+        window.location.href;
+
+    statusTexto.innerText =
+        "Entrou na sala. Aguardando transmissão...";
+
+}
+
+
+// CRIAR SALA
+
+criar.onclick = () => {
+
+    sala =
+        Math.random()
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
+
+    souTransmissor = true;
+
+    socket.emit(
+        "entrar-sala",
+        sala
+    );
+
+    codigoSala.innerText =
+        sala;
+
+
+    const link =
+        window.location.origin +
+        "/?sala=" +
+        sala;
+
+
+    linkSala.innerText =
+        link;
+
+
+    linkBox.style.display =
+        "block";
+
+    compartilhar.style.display =
+        "inline-block";
+
+    criar.style.display =
+        "none";
+
+
+    statusTexto.innerText =
+        "Sala criada. Envie o link para quem vai assistir.";
+
+};
+
+
+// COPIAR LINK
+
+copiar.onclick = async () => {
+
+    const link =
+        linkSala.innerText;
+
+    try {
+
+        await navigator.clipboard
+            .writeText(link);
+
+        copiar.innerText =
+            "✅ Link copiado!";
+
+        setTimeout(() => {
+
+            copiar.innerText =
+                "📋 Copiar link";
+
+        }, 2000);
+
+    }
+
+    catch {
+
+        alert(
+            "Copie este link:\n" +
+            link
+        );
+
+    }
+
+};
+
+
+// COMPARTILHAR TELA
+
+compartilhar.onclick =
+async () => {
+
+    try {
+
+        streamLocal =
+            await navigator.mediaDevices
+                .getDisplayMedia({
+
+                    video: true,
+
+                    audio: false
+
+                });
+
+
+        video.srcObject =
+            streamLocal;
+
+
+        criarPeer();
+
+
+        streamLocal
+            .getTracks()
+            .forEach(track => {
+
+                peer.addTrack(
+                    track,
+                    streamLocal
+                );
+
+            });
+
+
+        const offer =
+            await peer.createOffer();
+
+
+        await peer
+            .setLocalDescription(
+                offer
+            );
+
+
+        socket.emit(
+            "offer",
+            {
+
+                sala: sala,
+
+                offer: offer
+
+            }
+        );
+
+
+        compartilhar.style.display =
+            "none";
+
+        parar.style.display =
+            "inline-block";
+
+
+        statusTexto.innerText =
+            "🟢 Transmitindo sua tela";
+
+
+        streamLocal
+            .getVideoTracks()[0]
+            .onended = pararTransmissao;
+
+    }
+
+    catch (erro) {
+
+        console.error(erro);
+
+        statusTexto.innerText =
+            "Compartilhamento cancelado.";
+
+    }
+
+};
+
+
+// PARAR
+
+parar.onclick =
+    pararTransmissao;
+
+
+function pararTransmissao() {
+
+    if (streamLocal) {
+
+        streamLocal
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+        streamLocal = null;
+
+    }
+
+
+    video.srcObject = null;
+
+
+    if (peer) {
+
+        peer.close();
+
+        peer = null;
+
+    }
+
+
+    parar.style.display =
+        "none";
+
+    compartilhar.style.display =
+        "inline-block";
+
+
+    statusTexto.innerText =
+        "Transmissão encerrada.";
+
+}
+
+
+// WEBRTC
+
+function criarPeer() {
+
+    if (peer) {
+
+        peer.close();
+
+    }
+
+
+    peer =
+        new RTCPeerConnection(
+            config
+        );
+
+
+    peer.onicecandidate =
+    evento => {
+
+        if (evento.candidate) {
+
+            socket.emit(
+                "ice-candidate",
+                {
+
+                    sala: sala,
+
+                    candidate:
+                        evento.candidate
+
+                }
+            );
+
+        }
+
+    };
+
+
+    peer.ontrack =
+    evento => {
+
+        video.srcObject =
+            evento.streams[0];
+
+        video.play()
+            .catch(console.error);
+
+        statusTexto.innerText =
+            "🟢 Assistindo transmissão";
+
+    };
+
+
+    peer.onconnectionstatechange =
+    () => {
+
+        console.log(
+            "WebRTC:",
+            peer.connectionState
+        );
+
+    };
+
+}
+
+
+// RECEBER OFFER
+
+socket.on(
+"offer",
+async offer => {
+
+    if (souTransmissor)
+        return;
+
+
+    criarPeer();
+
+
+    await peer
+        .setRemoteDescription(
+            new RTCSessionDescription(
+                offer
+            )
+        );
+
+
+    const answer =
+        await peer.createAnswer();
+
+
+    await peer
+        .setLocalDescription(
+            answer
+        );
+
+
+    socket.emit(
+        "answer",
+        {
+
+            sala: sala,
+
+            answer: answer
+
+        }
+    );
+
+});
+
+
+// RECEBER ANSWER
+
+socket.on(
+"answer",
+async answer => {
+
+    if (!peer)
+        return;
+
+
+    await peer
+        .setRemoteDescription(
+            new RTCSessionDescription(
+                answer
+            )
+        );
+
+});
+
+
+// ICE
+
+socket.on(
+"ice-candidate",
+async candidate => {
+
+    try {
+
+        if (
+            peer &&
+            peer.remoteDescription
+        ) {
+
+            await peer
+                .addIceCandidate(
+                    new RTCIceCandidate(
+                        candidate
+                    )
+                );
+
+        }
+
+    }
+
+    catch (erro) {
+
+        console.error(
+            "Erro ICE:",
+            erro
+        );
+
+    }
+
+});
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Compartilhar Tela</title>
+
+    <style>
+
+        body {
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        #iniciar {
+            background-color: #28a745;
+            color: white;
+        }
+
+        #parar {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        video {
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 30px;
+
+            border: 2px solid #555;
+            border-radius: 15px;
+
+            background-color: black;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <h1>🖥️ Compartilhamento de Tela</h1>
+
+    <button id="iniciar">
+        Compartilhar tela
+    </button>
+
+    <button id="parar">
+        Parar
+    </button>
+
+    <br>
+
+    <video
+        id="video"
+        autoplay
+        muted>
+    </video>
+
+
+    <script>
+
+        const video =
+            document.getElementById("video");
+
+        const iniciar =
+            document.getElementById("iniciar");
+
+        const parar =
+            document.getElementById("parar");
+
+
+        let stream;
+
+
+        iniciar.addEventListener(
+            "click",
+            compartilharTela
+        );
+
+
+        parar.addEventListener(
+            "click",
+            pararCompartilhamento
+        );
+
+
+        async function compartilharTela() {
+
+            try {
+
+                stream =
+                    await navigator.mediaDevices.getDisplayMedia({
+
+                        video: true,
+
+                        audio: true
+
+                    });
+
+
+                video.srcObject = stream;
+
+
+                const faixaVideo =
+                    stream.getVideoTracks()[0];
+
+
+                faixaVideo.addEventListener(
+                    "ended",
+                    () => {
+
+                        video.srcObject = null;
+
+                    }
+                );
+
+
+            }
+
+            catch (erro) {
+
+                console.log(
+                    "Compartilhamento cancelado:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        function pararCompartilhamento() {
+
+            if (stream) {
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        track => track.stop()
+                    );
+
+                video.srcObject = null;
+
+            }
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>
