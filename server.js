@@ -1,116 +1,118 @@
-const express =
-    require("express");
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const { Server } = require("socket.io");
 
-const http =
-    require("http");
+const app = express();
+const server = http.createServer(app);
 
-const { Server } =
-    require("socket.io");
-
-const path =
-    require("path");
-
-
-const app =
-    express();
-
-const server =
-    http.createServer(app);
-
-const io =
-    new Server(server);
-
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 app.use(
     express.static(
-        path.join(
-            __dirname,
-            "public"
-        )
+        path.join(__dirname, "public")
     )
 );
 
+io.on("connection", (socket) => {
 
-io.on(
-    "connection",
-    socket => {
+    console.log("Conectado:", socket.id);
+
+    socket.on("entrar-sala", (sala) => {
+
+        socket.join(sala);
 
         console.log(
-            "Conectado:",
-            socket.id
+            socket.id,
+            "entrou em",
+            sala
         );
 
+        socket
+            .to(sala)
+            .emit(
+                "usuario-entrou",
+                socket.id
+            );
+    });
 
-        socket.on(
-            "entrar-sala",
-            sala => {
 
-                socket.join(sala);
+    socket.on("offer", (dados) => {
 
-                console.log(
-                    socket.id,
-                    "entrou em",
-                    sala
+        socket
+            .to(dados.sala)
+            .emit(
+                "offer",
+                dados.offer
+            );
+    });
+
+
+    socket.on("answer", (dados) => {
+
+        socket
+            .to(dados.sala)
+            .emit(
+                "answer",
+                dados.answer
+            );
+    });
+
+
+    socket.on(
+        "ice-candidate",
+        (dados) => {
+
+            socket
+                .to(dados.sala)
+                .emit(
+                    "ice-candidate",
+                    dados.candidate
                 );
-
-            }
-        );
-
-
-        socket.on(
-            "offer",
-            dados => {
-
-                socket
-                    .to(dados.sala)
-                    .emit(
-                        "offer",
-                        dados.offer
-                    );
-
-            }
-        );
-
-
-        socket.on(
-            "answer",
-            dados => {
-
-                socket
-                    .to(dados.sala)
-                    .emit(
-                        "answer",
-                        dados.answer
-                    );
-
-            }
-        );
-
-
-        socket.on(
-            "ice-candidate",
-            dados => {
-
-                socket
-                    .to(dados.sala)
-                    .emit(
-                        "ice-candidate",
-                        dados.candidate
-                    );
-
-            }
-        );
-
-    }
-);
-
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, "0.0.0.0", () => {
-
-    console.log(
-        `Servidor rodando na porta ${PORT}`
+        }
     );
 
+
+    socket.on(
+        "encerrar-transmissao",
+        (sala) => {
+
+            socket
+                .to(sala)
+                .emit(
+                    "transmissao-encerrada"
+                );
+        }
+    );
+
+
+    socket.on("disconnect", () => {
+
+        console.log(
+            "Desconectado:",
+            socket.id
+        );
+    });
+
 });
+
+
+const PORT =
+    process.env.PORT || 3000;
+
+
+server.listen(
+    PORT,
+    "0.0.0.0",
+    () => {
+
+        console.log(
+            `Servidor rodando na porta ${PORT}`
+        );
+    }
+);

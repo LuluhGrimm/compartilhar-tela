@@ -1,10 +1,12 @@
 {
   "name": "compartilhar-tela",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.2",
+  "description": "Aplicativo de compartilhamento de tela com WebRTC",
+  "main": "electron.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "electron": ".\\node_modules\\.bin\\electron.cmd .",
+    "dist": "electron-builder"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +15,30 @@
   "dependencies": {
     "express": "^5.2.1",
     "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.luluh.compartilhartela",
+    "productName": "Compartilhar Tela",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron.js",
+      "preload.js",
+      "server.js",
+      "public/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable",
+        "zip"
+      ]
+    }
   }
 }

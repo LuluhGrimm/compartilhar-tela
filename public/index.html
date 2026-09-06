@@ -1,223 +1,535 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Compartilhar Tela</title>
+<meta charset="UTF-8">
 
-    <style>
-        body {
-            margin: 0;
-            background: #111;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 30px;
-        }
+<title>Compartilhar Tela</title>
 
-        button {
-            padding: 12px 20px;
-            margin: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 8px;
-        }
 
-        #criar {
-            background: #28a745;
-            color: white;
-        }
+<style>
 
-        #compartilhar {
-            background: #007bff;
-            color: white;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        #copiar {
-            background: #555;
-            color: white;
-        }
+body {
+    margin: 0;
+    background: #0f0f0f;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+}
 
-        #parar {
-            background: #dc3545;
-            color: white;
-        }
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px;
+    text-align: center;
+}
 
-        #linkBox {
-            display: none;
-            margin: 25px auto;
-            padding: 15px;
-            background: #222;
-            border-radius: 10px;
-            max-width: 700px;
-        }
+h1 {
+    margin-bottom: 8px;
+}
 
-        #linkSala {
-            word-break: break-all;
-        }
+.subtitulo {
+    color: #aaa;
+    margin-bottom: 30px;
+}
 
-        #status {
-            margin: 20px;
-            color: #ccc;
-        }
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
 
-        video {
-            width: 100%;
-            max-width: 900px;
-            background: black;
-            border: 2px solid #444;
-            border-radius: 12px;
-            margin-top: 20px;
-            aspect-ratio: 16 / 9;
-            object-fit: contain;
-        }
+#criar {
+    background: #23a559;
+    color: white;
+}
 
-    </style>
+#compartilhar {
+    background: #5865f2;
+    color: white;
+}
+
+#parar {
+    background: #da373c;
+    color: white;
+}
+
+#copiar,
+#telaCheia,
+#ativarSom {
+    background: #404249;
+    color: white;
+}
+
+#linkBox {
+    display: none;
+    background: #1e1f22;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 700px;
+    margin: 20px auto;
+}
+
+#linkSala {
+    color: #b5bac1;
+    word-break: break-all;
+}
+
+#status {
+    color: #b5bac1;
+    margin: 20px;
+}
+
+.botoes {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.video-container {
+    width: 100%;
+    background: black;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+video {
+    width: 100%;
+    display: block;
+    background: black;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+}
+
+
+/* MODAL */
+
+#modalFontes {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.8);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-conteudo {
+    width: min(1000px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    background: #1e1f22;
+    padding: 25px;
+    border-radius: 15px;
+}
+
+#listaFontes {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(220px, 1fr)
+        );
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.fonte {
+    background: #2b2d31;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.fonte:hover {
+    border-color: #5865f2;
+}
+
+.fonte img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background: black;
+    border-radius: 7px;
+}
+
+.fonte-nome {
+    margin-top: 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.configuracoes {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.config {
+    background: #2b2d31;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+select {
+    background: #111214;
+    color: white;
+    border: 1px solid #555;
+    padding: 7px;
+    border-radius: 5px;
+}
+
+</style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-    <h1>🖥️ Compartilhar Tela</h1>
+<h1>
+    🖥️ Compartilhar Tela
+</h1>
+
+<p class="subtitulo">
+
+    Compartilhamento em tempo real
+
+</p>
+
+
+<button id="criar">
+
+    Criar sala
+
+</button>
+
+
+<div id="linkBox">
+
+    <h3>
+        Sala criada
+    </h3>
 
     <p>
-        Crie uma sala e envie o link para quem vai assistir.
+        Código:
+        <strong id="codigoSala">
+        </strong>
     </p>
 
-    <button id="criar">
-        Criar sala
-    </button>
-
-    <div id="linkBox">
-
-        <h3>Sala criada!</h3>
-
-        <p>
-            Código:
-            <strong id="codigoSala"></strong>
-        </p>
-
-        <p id="linkSala"></p>
-
-        <button id="copiar">
-            📋 Copiar link
-        </button>
-
-    </div>
-
-    <br>
-
-    <button id="compartilhar" style="display:none;">
-        🖥️ Compartilhar tela
-    </button>
-
-    <button id="parar" style="display:none;">
-        ⏹ Parar transmissão
-    </button>
-
-    <p id="status">
-        Crie ou entre em uma sala.
+    <p id="linkSala">
     </p>
 
-    <video
-        id="video"
-        autoplay
-        playsinline
-        muted>
-    </video>
+    <button id="copiar">
+        📋 Copiar link
+    </button>
 
-    <br>
+</div>
+
+
+<div class="botoes">
+
+<button
+    id="compartilhar"
+    style="display:none;"
+>
+    🖥️ Compartilhar tela
+</button>
+
+
+<button
+    id="parar"
+    style="display:none;"
+>
+    ⏹ Parar transmissão
+</button>
+
 
 <button id="telaCheia">
     ⛶ Tela cheia
 </button>
 
+
+<button
+    id="ativarSom"
+    style="display:none;"
+>
+    🔊 Ativar som
+</button>
+
 </div>
+
+
+<p id="status">
+
+    Crie uma sala para começar.
+
+</p>
+
+
+<div class="video-container">
+
+<video
+    id="video"
+    autoplay
+    playsinline
+    muted
+>
+</video>
+
+</div>
+
+
+</div>
+
+
+
+<div id="modalFontes">
+
+<div class="modal-conteudo">
+
+<h2>
+    Compartilhar sua tela
+</h2>
+
+<p>
+    Escolha uma tela ou aplicativo.
+</p>
+
+
+<div class="configuracoes">
+
+<div class="config">
+
+Qualidade
+
+<select id="qualidade">
+
+<option value="720">
+    720p
+</option>
+
+<option
+    value="1080"
+    selected
+>
+    1080p
+</option>
+
+</select>
+
+</div>
+
+
+<div class="config">
+
+FPS
+
+<select id="fps">
+
+<option
+    value="30"
+    selected
+>
+    30 FPS
+</option>
+
+<option value="60">
+    60 FPS
+</option>
+
+</select>
+
+</div>
+
+
+<div class="config">
+
+<label>
+
+<input
+    type="checkbox"
+    id="usarAudio"
+    checked
+>
+
+Áudio do sistema
+
+</label>
+
+</div>
+
+</div>
+
+
+<div id="listaFontes">
+</div>
+
+
+<button id="fecharSeletor">
+
+    Cancelar
+
+</button>
+
+</div>
+
+</div>
+
 
 
 <script src="/socket.io/socket.io.js"></script>
 
+
 <script>
-    const botaoTelaCheia =
-    document.getElementById("telaCheia");
 
-botaoTelaCheia.onclick = async () => {
 
-    try {
+/*
+==============================
+SERVIDOR PÚBLICO
+==============================
+*/
 
-        if (video.requestFullscreen) {
+const SERVIDOR_PUBLICO =
+    "https://compartilhar-tela-ic01.onrender.com";
 
-            await video.requestFullscreen();
 
-        } else if (video.webkitRequestFullscreen) {
+const estouNoElectron =
+    !!window.electronAPI;
 
-            video.webkitRequestFullscreen();
 
+/*
+No Electron usamos o Render.
+
+No navegador do amigo,
+também usamos o Render.
+*/
+
+const socket =
+    io(
+        SERVIDOR_PUBLICO,
+        {
+            transports: [
+                "websocket",
+                "polling"
+            ]
         }
+    );
 
-    } catch (erro) {
 
-        console.error(
-            "Erro ao entrar em tela cheia:",
-            erro
-        );
-
-    }
-
-};
-
-const socket = io();
 
 const video =
-    document.getElementById("video");
-
-const statusTexto =
-    document.getElementById("status");
+    document.getElementById(
+        "video"
+    );
 
 const criar =
-    document.getElementById("criar");
+    document.getElementById(
+        "criar"
+    );
 
 const compartilhar =
-    document.getElementById("compartilhar");
+    document.getElementById(
+        "compartilhar"
+    );
 
 const parar =
-    document.getElementById("parar");
+    document.getElementById(
+        "parar"
+    );
 
-const copiar =
-    document.getElementById("copiar");
+const telaCheia =
+    document.getElementById(
+        "telaCheia"
+    );
+
+const ativarSom =
+    document.getElementById(
+        "ativarSom"
+    );
+
+const statusTexto =
+    document.getElementById(
+        "status"
+    );
 
 const linkBox =
-    document.getElementById("linkBox");
+    document.getElementById(
+        "linkBox"
+    );
 
 const codigoSala =
-    document.getElementById("codigoSala");
+    document.getElementById(
+        "codigoSala"
+    );
 
 const linkSala =
-    document.getElementById("linkSala");
+    document.getElementById(
+        "linkSala"
+    );
+
+const copiar =
+    document.getElementById(
+        "copiar"
+    );
+
+const modalFontes =
+    document.getElementById(
+        "modalFontes"
+    );
+
+const listaFontes =
+    document.getElementById(
+        "listaFontes"
+    );
 
 
 let sala = "";
-let peer = null;
-let streamLocal = null;
+
 let souTransmissor = false;
 
+let streamLocal = null;
 
-const config = {
+let peer = null;
+
+let candidatosPendentes = [];
+
+
+
+const configuracaoWebRTC = {
 
     iceServers: [
 
         {
             urls:
                 "stun:stun.l.google.com:19302"
+        },
+
+        {
+            urls:
+                "stun:stun1.l.google.com:19302"
         }
 
     ]
@@ -225,52 +537,111 @@ const config = {
 };
 
 
-// Verifica se existe ?sala=XXXXX no link
+
+socket.on(
+    "connect",
+    () => {
+
+        console.log(
+            "Socket conectado:",
+            socket.id
+        );
+
+    }
+);
+
+
+
+socket.on(
+    "connect_error",
+    erro => {
+
+        console.error(
+            "Erro Socket:",
+            erro
+        );
+
+        statusTexto.innerText =
+            "Falha ao conectar ao servidor.";
+
+    }
+);
+
+
+
+/*
+==============================
+ENTRAR PELO LINK
+==============================
+*/
 
 const parametros =
     new URLSearchParams(
         window.location.search
     );
 
+
 const salaDoLink =
-    parametros.get("sala");
+    parametros.get(
+        "sala"
+    );
 
 
 if (salaDoLink) {
 
-    sala = salaDoLink;
+    sala =
+        salaDoLink;
 
-    souTransmissor = false;
+
+    souTransmissor =
+        false;
+
 
     socket.emit(
         "entrar-sala",
         sala
     );
 
+
     criar.style.display =
         "none";
+
 
     compartilhar.style.display =
         "none";
 
+
     linkBox.style.display =
         "block";
+
 
     codigoSala.innerText =
         sala;
 
+
     linkSala.innerText =
         window.location.href;
 
+
+    ativarSom.style.display =
+        "inline-block";
+
+
     statusTexto.innerText =
-        "Entrou na sala. Aguardando transmissão...";
+        "Aguardando transmissão...";
 
 }
 
 
-// CRIAR SALA
 
-criar.onclick = () => {
+/*
+==============================
+CRIAR SALA
+==============================
+*/
+
+criar.onclick =
+() => {
 
     sala =
         Math.random()
@@ -278,32 +649,44 @@ criar.onclick = () => {
             .substring(2, 8)
             .toUpperCase();
 
-    souTransmissor = true;
+
+    souTransmissor =
+        true;
+
 
     socket.emit(
         "entrar-sala",
         sala
     );
 
+
     codigoSala.innerText =
         sala;
 
 
-    const link =
-        window.location.origin +
-        "/?sala=" +
-        sala;
+    /*
+    IMPORTANTE:
+    o link enviado ao amigo
+    sempre é o endereço público.
+    */
+
+    const linkPublico =
+        SERVIDOR_PUBLICO
+        + "/?sala="
+        + sala;
 
 
     linkSala.innerText =
-        link;
+        linkPublico;
 
 
     linkBox.style.display =
         "block";
 
+
     compartilhar.style.display =
         "inline-block";
+
 
     criar.style.display =
         "none";
@@ -315,35 +698,44 @@ criar.onclick = () => {
 };
 
 
-// COPIAR LINK
 
-copiar.onclick = async () => {
+/*
+==============================
+COPIAR LINK
+==============================
+*/
 
-    const link =
-        linkSala.innerText;
+copiar.onclick =
+async () => {
 
     try {
 
-        await navigator.clipboard
-            .writeText(link);
+        await navigator
+            .clipboard
+            .writeText(
+                linkSala.innerText
+            );
+
 
         copiar.innerText =
-            "✅ Link copiado!";
+            "✅ Copiado";
 
-        setTimeout(() => {
 
-            copiar.innerText =
-                "📋 Copiar link";
+        setTimeout(
+            () => {
 
-        }, 2000);
+                copiar.innerText =
+                    "📋 Copiar link";
+
+            },
+            1500
+        );
 
     }
-
     catch {
 
         alert(
-            "Copie este link:\n" +
-            link
+            linkSala.innerText
         );
 
     }
@@ -351,54 +743,327 @@ copiar.onclick = async () => {
 };
 
 
-// COMPARTILHAR TELA
+
+/*
+==============================
+COMPARTILHAR
+==============================
+*/
 
 compartilhar.onclick =
 async () => {
 
+    if (
+        estouNoElectron
+    ) {
+
+        await abrirSeletorElectron();
+
+        return;
+
+    }
+
+
+    await compartilharNavegador();
+
+};
+
+
+
+/*
+==============================
+SELETOR ELECTRON
+==============================
+*/
+
+async function abrirSeletorElectron() {
+
+    modalFontes.style.display =
+        "flex";
+
+
+    listaFontes.innerHTML =
+        "Carregando janelas...";
+
+
+    try {
+
+        const fontes =
+            await window
+                .electronAPI
+                .listarFontes();
+
+
+        listaFontes.innerHTML =
+            "";
+
+
+        fontes.forEach(
+            fonte => {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "fonte";
+
+
+                card.innerHTML = `
+
+                    <img
+                        src="${fonte.thumbnail}"
+                    >
+
+                    <div class="fonte-nome">
+                        ${fonte.nome}
+                    </div>
+
+                `;
+
+
+                card.onclick =
+                async () => {
+
+                    await window
+                        .electronAPI
+                        .selecionarFonte(
+                            fonte.id
+                        );
+
+
+                    modalFontes
+                        .style
+                        .display =
+                        "none";
+
+
+                    await iniciarElectron();
+
+                };
+
+
+                listaFontes
+                    .appendChild(
+                        card
+                    );
+
+            }
+        );
+
+    }
+    catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        listaFontes.innerHTML =
+            "Erro ao carregar janelas.";
+
+    }
+
+}
+
+
+
+/*
+==============================
+CAPTURA ELECTRON
+==============================
+*/
+
+async function iniciarElectron() {
+
+    try {
+
+        const qualidade =
+            Number(
+                document
+                    .getElementById(
+                        "qualidade"
+                    )
+                    .value
+            );
+
+
+        const fps =
+            Number(
+                document
+                    .getElementById(
+                        "fps"
+                    )
+                    .value
+            );
+
+
+        const audio =
+            document
+                .getElementById(
+                    "usarAudio"
+                )
+                .checked;
+
+
+        const largura =
+            qualidade === 1080
+                ? 1920
+                : 1280;
+
+
+        const altura =
+            qualidade === 1080
+                ? 1080
+                : 720;
+
+
+        streamLocal =
+            await navigator
+                .mediaDevices
+                .getDisplayMedia({
+
+                    video: {
+
+                        width: {
+                            ideal:
+                                largura
+                        },
+
+                        height: {
+                            ideal:
+                                altura
+                        },
+
+                        frameRate: {
+                            ideal:
+                                fps,
+                            max:
+                                fps
+                        }
+
+                    },
+
+                    audio:
+                        audio
+
+                });
+
+
+        await prepararTransmissao();
+
+    }
+    catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        statusTexto.innerText =
+            "Não foi possível iniciar a transmissão.";
+
+    }
+
+}
+
+
+
+/*
+==============================
+NAVEGADOR
+==============================
+*/
+
+async function compartilharNavegador() {
+
     try {
 
         streamLocal =
-    await navigator.mediaDevices
-        .getDisplayMedia({
+            await navigator
+                .mediaDevices
+                .getDisplayMedia({
 
-            video: {
-                width: {
-                    ideal: 1920,
-                    max: 1920
-                },
+                    video: {
 
-                height: {
-                    ideal: 1080,
-                    max: 1080
-                },
+                        width: {
+                            ideal: 1920
+                        },
 
-                frameRate: {
-                    ideal: 30,
-                    max: 30
-                }
-            },
+                        height: {
+                            ideal: 1080
+                        },
 
-            audio: true
+                        frameRate: {
+                            ideal: 30,
+                            max: 30
+                        }
 
-        });
+                    },
 
-        const videoTrack =
-    streamLocal.getVideoTracks()[0];
+                    audio:
+                        true
 
-videoTrack.contentHint = "detail";
+                });
 
 
-        video.srcObject =
-            streamLocal;
+        await prepararTransmissao();
+
+    }
+    catch (erro) {
+
+        console.error(
+            erro
+        );
 
 
-        criarPeer();
+        statusTexto.innerText =
+            "Compartilhamento cancelado.";
+
+    }
+
+}
 
 
+
+/*
+==============================
+INICIAR WEBRTC
+==============================
+*/
+
+async function prepararTransmissao() {
+
+    video.muted =
+        true;
+
+
+    video.srcObject =
+        streamLocal;
+
+
+    const trackVideo =
         streamLocal
-    .getTracks()
-    .forEach(track => {
+            .getVideoTracks()[0];
+
+
+    if (trackVideo) {
+
+        trackVideo.contentHint =
+            "detail";
+
+    }
+
+
+    criarPeer();
+
+
+    for (
+        const track
+        of streamLocal.getTracks()
+    ) {
 
         const sender =
             peer.addTrack(
@@ -406,123 +1071,89 @@ videoTrack.contentHint = "detail";
                 streamLocal
             );
 
-        if (track.kind === "video") {
 
-            const parametros =
-                sender.getParameters();
+        if (
+            track.kind ===
+            "video"
+        ) {
 
-            if (!parametros.encodings) {
-                parametros.encodings = [{}];
+            try {
+
+                const parametros =
+                    sender
+                        .getParameters();
+
+
+                if (
+                    !parametros.encodings
+                    ||
+                    parametros
+                        .encodings
+                        .length === 0
+                ) {
+
+                    parametros.encodings =
+                        [{}];
+
+                }
+
+
+                parametros
+                    .encodings[0]
+                    .maxBitrate =
+                    8000000;
+
+
+                await sender
+                    .setParameters(
+                        parametros
+                    );
+
+            }
+            catch {
+
+                console.log(
+                    "Bitrate automático."
+                );
+
             }
 
-            parametros.encodings[0].maxBitrate =
-                6000000;
-
-            sender.setParameters(parametros)
-                .catch(console.error);
         }
 
-    });
-
-
-        const offer =
-            await peer.createOffer();
-
-
-        await peer
-            .setLocalDescription(
-                offer
-            );
-
-
-        socket.emit(
-            "offer",
-            {
-
-                sala: sala,
-
-                offer: offer
-
-            }
-        );
-
-
-        compartilhar.style.display =
-            "none";
-
-        parar.style.display =
-            "inline-block";
-
-
-        statusTexto.innerText =
-            "🟢 Transmitindo sua tela";
-
-
-        streamLocal
-            .getVideoTracks()[0]
-            .onended = pararTransmissao;
-
-    }
-
-    catch (erro) {
-
-        console.error(erro);
-
-        statusTexto.innerText =
-            "Compartilhamento cancelado.";
-
-    }
-
-};
-
-
-// PARAR
-
-parar.onclick =
-    pararTransmissao;
-
-
-function pararTransmissao() {
-
-    if (streamLocal) {
-
-        streamLocal
-            .getTracks()
-            .forEach(
-                track => track.stop()
-            );
-
-        streamLocal = null;
-
     }
 
 
-    video.srcObject = null;
+    await enviarOffer();
 
 
-    if (peer) {
-
-        peer.close();
-
-        peer = null;
-
-    }
+    compartilhar.style.display =
+        "none";
 
 
     parar.style.display =
-        "none";
-
-    compartilhar.style.display =
         "inline-block";
 
 
     statusTexto.innerText =
-        "Transmissão encerrada.";
+        "🟢 Transmitindo";
+
+
+    if (trackVideo) {
+
+        trackVideo.onended =
+            pararTransmissao;
+
+    }
 
 }
 
 
-// WEBRTC
+
+/*
+==============================
+CRIAR PEER
+==============================
+*/
 
 function criarPeer() {
 
@@ -533,22 +1164,29 @@ function criarPeer() {
     }
 
 
+    candidatosPendentes =
+        [];
+
+
     peer =
         new RTCPeerConnection(
-            config
+            configuracaoWebRTC
         );
 
 
     peer.onicecandidate =
     evento => {
 
-        if (evento.candidate) {
+        if (
+            evento.candidate
+        ) {
 
             socket.emit(
                 "ice-candidate",
                 {
 
-                    sala: sala,
+                    sala:
+                        sala,
 
                     candidate:
                         evento.candidate
@@ -562,111 +1200,257 @@ function criarPeer() {
 
 
     peer.ontrack =
-evento => {
+    evento => {
 
-    video.srcObject =
-        evento.streams[0];
+        video.srcObject =
+            evento.streams[0];
 
-    video.muted = true;
 
-    video.play()
-        .catch(console.error);
+        ativarSom.style.display =
+            "inline-block";
 
-    statusTexto.innerText =
-        "🟢 Assistindo transmissão";
 
-};
+        statusTexto.innerText =
+            "🟢 Recebendo transmissão";
+
+
+        video.play()
+            .catch(
+                () => {
+
+                    statusTexto.innerText =
+                        "Clique em Ativar som para assistir.";
+
+                }
+            );
+
+    };
+
 
     peer.onconnectionstatechange =
     () => {
 
         console.log(
-            "WebRTC:",
+            "Estado WebRTC:",
             peer.connectionState
         );
+
+
+        if (
+            peer.connectionState ===
+            "connected"
+        ) {
+
+            statusTexto.innerText =
+                souTransmissor
+                    ? "🟢 Transmitindo"
+                    : "🟢 Conectado";
+
+        }
+
+
+        if (
+            peer.connectionState ===
+            "failed"
+        ) {
+
+            statusTexto.innerText =
+                "Falha na conexão WebRTC.";
+
+        }
 
     };
 
 }
 
 
-// RECEBER OFFER
 
-socket.on(
-"offer",
-async offer => {
+/*
+==============================
+OFFER
+==============================
+*/
 
-    if (souTransmissor)
-        return;
-
-
-    criarPeer();
-
-
-    await peer
-        .setRemoteDescription(
-            new RTCSessionDescription(
-                offer
-            )
-        );
-
-
-    const answer =
-        await peer.createAnswer();
-
-
-    await peer
-        .setLocalDescription(
-            answer
-        );
-
-
-    socket.emit(
-        "answer",
-        {
-
-            sala: sala,
-
-            answer: answer
-
-        }
-    );
-
-});
-
-
-// RECEBER ANSWER
-
-socket.on(
-"answer",
-async answer => {
+async function enviarOffer() {
 
     if (!peer)
         return;
 
 
+    const offer =
+        await peer
+            .createOffer();
+
+
     await peer
-        .setRemoteDescription(
-            new RTCSessionDescription(
-                answer
-            )
+        .setLocalDescription(
+            offer
         );
 
-});
+
+    socket.emit(
+        "offer",
+        {
+
+            sala:
+                sala,
+
+            offer:
+                offer
+
+        }
+    );
+
+}
 
 
-// ICE
+
+/*
+==============================
+VIEWER ENTROU
+==============================
+*/
 
 socket.on(
-"ice-candidate",
-async candidate => {
-
-    try {
+    "usuario-entrou",
+    async () => {
 
         if (
-            peer &&
-            peer.remoteDescription
+            souTransmissor
+            &&
+            streamLocal
+            &&
+            peer
         ) {
+
+            await enviarOffer();
+
+        }
+
+    }
+);
+
+
+
+/*
+==============================
+RECEBER OFFER
+==============================
+*/
+
+socket.on(
+    "offer",
+    async offer => {
+
+        if (
+            souTransmissor
+        )
+            return;
+
+
+        criarPeer();
+
+
+        await peer
+            .setRemoteDescription(
+                new RTCSessionDescription(
+                    offer
+                )
+            );
+
+
+        await adicionarPendentes();
+
+
+        const answer =
+            await peer
+                .createAnswer();
+
+
+        await peer
+            .setLocalDescription(
+                answer
+            );
+
+
+        socket.emit(
+            "answer",
+            {
+
+                sala:
+                    sala,
+
+                answer:
+                    answer
+
+            }
+        );
+
+    }
+);
+
+
+
+/*
+==============================
+RECEBER ANSWER
+==============================
+*/
+
+socket.on(
+    "answer",
+    async answer => {
+
+        if (!peer)
+            return;
+
+
+        await peer
+            .setRemoteDescription(
+                new RTCSessionDescription(
+                    answer
+                )
+            );
+
+
+        await adicionarPendentes();
+
+    }
+);
+
+
+
+/*
+==============================
+ICE
+==============================
+*/
+
+socket.on(
+    "ice-candidate",
+    async candidate => {
+
+        if (!candidate)
+            return;
+
+
+        if (
+            !peer
+            ||
+            !peer.remoteDescription
+        ) {
+
+            candidatosPendentes
+                .push(
+                    candidate
+                );
+
+            return;
+
+        }
+
+
+        try {
 
             await peer
                 .addIceCandidate(
@@ -676,21 +1460,241 @@ async candidate => {
                 );
 
         }
+        catch (erro) {
+
+            console.error(
+                "Erro ICE:",
+                erro
+            );
+
+        }
+
+    }
+);
+
+
+
+async function adicionarPendentes() {
+
+    if (!peer)
+        return;
+
+
+    for (
+        const candidato
+        of candidatosPendentes
+    ) {
+
+        try {
+
+            await peer
+                .addIceCandidate(
+                    new RTCIceCandidate(
+                        candidato
+                    )
+                );
+
+        }
+        catch (erro) {
+
+            console.error(
+                erro
+            );
+
+        }
 
     }
 
+
+    candidatosPendentes =
+        [];
+
+}
+
+
+
+/*
+==============================
+ATIVAR SOM
+==============================
+*/
+
+ativarSom.onclick =
+async () => {
+
+    video.muted =
+        false;
+
+
+    try {
+
+        await video.play();
+
+
+        ativarSom.innerText =
+            "🔊 Som ligado";
+
+
+        statusTexto.innerText =
+            "🟢 Assistindo transmissão";
+
+    }
     catch (erro) {
 
         console.error(
-            "Erro ICE:",
             erro
         );
 
     }
 
-});
+};
+
+
+
+/*
+==============================
+PARAR
+==============================
+*/
+
+parar.onclick =
+    pararTransmissao;
+
+
+function pararTransmissao() {
+
+    if (
+        streamLocal
+    ) {
+
+        streamLocal
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+
+        streamLocal =
+            null;
+
+    }
+
+
+    if (peer) {
+
+        peer.close();
+
+        peer =
+            null;
+
+    }
+
+
+    video.srcObject =
+        null;
+
+
+    socket.emit(
+        "encerrar-transmissao",
+        sala
+    );
+
+
+    parar.style.display =
+        "none";
+
+
+    if (
+        souTransmissor
+    ) {
+
+        compartilhar.style.display =
+            "inline-block";
+
+    }
+
+
+    statusTexto.innerText =
+        "Transmissão encerrada.";
+
+}
+
+
+
+socket.on(
+    "transmissao-encerrada",
+    () => {
+
+        video.srcObject =
+            null;
+
+
+        statusTexto.innerText =
+            "A transmissão foi encerrada.";
+
+    }
+);
+
+
+
+/*
+==============================
+TELA CHEIA
+==============================
+*/
+
+telaCheia.onclick =
+async () => {
+
+    try {
+
+        if (
+            video.requestFullscreen
+        ) {
+
+            await video
+                .requestFullscreen();
+
+        }
+
+        else if (
+            video.webkitRequestFullscreen
+        ) {
+
+            video
+                .webkitRequestFullscreen();
+
+        }
+
+    }
+    catch (erro) {
+
+        console.error(
+            erro
+        );
+
+    }
+
+};
+
+
+
+document
+    .getElementById(
+        "fecharSeletor"
+    )
+    .onclick =
+() => {
+
+    modalFontes.style.display =
+        "none";
+
+};
+
 
 </script>
+
 
 </body>
 
