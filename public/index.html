@@ -343,7 +343,7 @@ async () => {
                 }
             },
 
-            audio: false
+            audio: true
 
         });
 
@@ -526,19 +526,20 @@ function criarPeer() {
 
 
     peer.ontrack =
-    evento => {
+evento => {
 
-        video.srcObject =
-            evento.streams[0];
+    video.srcObject =
+        evento.streams[0];
 
-        video.play()
-            .catch(console.error);
+    video.muted = true;
 
-        statusTexto.innerText =
-            "🟢 Assistindo transmissão";
+    video.play()
+        .catch(console.error);
 
-    };
+    statusTexto.innerText =
+        "🟢 Assistindo transmissão";
 
+};
 
     peer.onconnectionstatechange =
     () => {
