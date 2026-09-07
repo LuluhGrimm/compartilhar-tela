@@ -9,7 +9,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Compartilhar Tela</title>
+    <title>LuluhGo</title>
 
     <style>
         * {
@@ -191,6 +191,12 @@
             padding: 7px;
             border-radius: 5px;
         }
+
+        .aviso-audio {
+            color: #b5bac1;
+            font-size: 13px;
+            margin-top: 12px;
+        }
     </style>
 </head>
 
@@ -199,7 +205,7 @@
 <div class="container">
 
     <h1>
-        🖥️ Compartilhar Tela
+        💜 LuluhGo
     </h1>
 
     <p class="subtitulo">
@@ -253,7 +259,7 @@
             id="ativarSom"
             style="display:none;"
         >
-            🔊 Ativar som
+            🔇 Mutado
         </button>
 
     </div>
@@ -342,13 +348,18 @@
                         checked
                     >
 
-                    Áudio do sistema
+                    Áudio do aplicativo
 
                 </label>
 
             </div>
 
         </div>
+
+        <p class="aviso-audio">
+            No aplicativo LuluhGo, o áudio exclusivo funciona
+            ao escolher uma janela de aplicativo.
+        </p>
 
         <div id="listaFontes"></div>
 
@@ -408,12 +419,20 @@ const modalFontes =
 const listaFontes =
     document.getElementById("listaFontes");
 
+const usarAudioCheckbox =
+    document.getElementById("usarAudio");
+
 
 const estouNoElectron =
     !!window.electronAPI;
 
 
-let sala = "";
+// ==========================================================
+// ESTADO
+// ==========================================================
+
+let sala =
+    "";
 
 let souTransmissor =
     false;
@@ -430,6 +449,54 @@ let socketConectado =
 let candidatosPendentes =
     [];
 
+let fonteEscolhida =
+    null;
+
+
+// ==========================================================
+// ÁUDIO NATIVO
+// ==========================================================
+
+let audioContextNativo =
+    null;
+
+let audioProcessor =
+    null;
+
+let audioDestino =
+    null;
+
+let audioGanhoMudo =
+    null;
+
+let audioTrackNativo =
+    null;
+
+let filaAudio =
+    [];
+
+let amostrasNaFila =
+    0;
+
+let restoPCM =
+    new Uint8Array(0);
+
+let removerListenerPCM =
+    null;
+
+let removerListenerErro =
+    null;
+
+let removerListenerEncerrado =
+    null;
+
+let audioNativoAtivo =
+    false;
+
+
+// ==========================================================
+// WEBRTC
+// ==========================================================
 
 const configuracaoWebRTC = {
 
@@ -450,15 +517,9 @@ const configuracaoWebRTC = {
 };
 
 
-/*
-====================================
-SOCKET.IO
-
-IMPORTANTE:
-autoConnect fica desligado
-até todos os eventos estarem prontos.
-====================================
-*/
+// ==========================================================
+// SOCKET.IO
+// ==========================================================
 
 const socket =
     io(
@@ -506,7 +567,9 @@ socket.on(
         );
 
 
-        if (sala) {
+        if (
+            sala
+        ) {
 
             socket.emit(
                 "entrar-sala",
@@ -514,20 +577,10 @@ socket.on(
             );
 
 
-            if (
+            statusTexto.innerText =
                 souTransmissor
-            ) {
-
-                statusTexto.innerText =
-                    "🟢 Conectado. Sala pronta.";
-
-            }
-            else {
-
-                statusTexto.innerText =
-                    "🟢 Conectado. Aguardando transmissão...";
-
-            }
+                    ? "🟢 Conectado. Sala pronta."
+                    : "🟢 Conectado. Aguardando transmissão...";
 
         }
         else {
@@ -583,22 +636,15 @@ socket.on(
 );
 
 
-/*
-Somente AGORA começa a conexão.
-*/
-
 statusTexto.innerText =
     "Conectando ao servidor...";
 
 socket.connect();
 
 
-
-/*
-====================================
-ENTRAR EM SALA PELO LINK
-====================================
-*/
+// ==========================================================
+// ENTRAR NA SALA PELO LINK
+// ==========================================================
 
 const parametrosURL =
     new URLSearchParams(
@@ -610,7 +656,9 @@ const salaDoLink =
     parametrosURL.get("sala");
 
 
-if (salaDoLink) {
+if (
+    salaDoLink
+) {
 
     sala =
         salaDoLink;
@@ -658,12 +706,9 @@ if (salaDoLink) {
 }
 
 
-
-/*
-====================================
-CRIAR SALA
-====================================
-*/
+// ==========================================================
+// CRIAR SALA
+// ==========================================================
 
 criar.onclick =
 () => {
@@ -703,8 +748,10 @@ criar.onclick =
 
     const link =
         SERVIDOR_PUBLICO
-        + "/?sala="
-        + sala;
+        +
+        "/?sala="
+        +
+        sala;
 
 
     linkSala.innerText =
@@ -729,12 +776,9 @@ criar.onclick =
 };
 
 
-
-/*
-====================================
-COPIAR LINK
-====================================
-*/
+// ==========================================================
+// COPIAR LINK
+// ==========================================================
 
 copiar.onclick =
 async () => {
@@ -774,12 +818,9 @@ async () => {
 };
 
 
-
-/*
-====================================
-BOTÃO COMPARTILHAR
-====================================
-*/
+// ==========================================================
+// BOTÃO COMPARTILHAR
+// ==========================================================
 
 compartilhar.onclick =
 async () => {
@@ -800,12 +841,9 @@ async () => {
 };
 
 
-
-/*
-====================================
-LISTAR JANELAS DO ELECTRON
-====================================
-*/
+// ==========================================================
+// SELETOR DO ELECTRON
+// ==========================================================
 
 async function abrirSeletorElectron() {
 
@@ -846,6 +884,7 @@ async function abrirSeletorElectron() {
 
                     <img
                         src="${fonte.thumbnail}"
+                        alt=""
                     >
 
                     <div class="fonte-nome">
@@ -858,11 +897,28 @@ async function abrirSeletorElectron() {
                 card.onclick =
                 async () => {
 
-                    await window
-                        .electronAPI
-                        .selecionarFonte(
-                            fonte.id
-                        );
+                    fonteEscolhida =
+                        fonte;
+
+
+                    const selecionada =
+                        await window
+                            .electronAPI
+                            .selecionarFonte(
+                                fonte.id
+                            );
+
+
+                    if (
+                        !selecionada
+                    ) {
+
+                        statusTexto.innerText =
+                            "Não foi possível selecionar a janela.";
+
+                        return;
+
+                    }
 
 
                     modalFontes.style.display =
@@ -883,7 +939,9 @@ async function abrirSeletorElectron() {
         );
 
     }
-    catch (erro) {
+    catch (
+        erro
+    ) {
 
         console.error(
             erro
@@ -898,12 +956,802 @@ async function abrirSeletorElectron() {
 }
 
 
+// ==========================================================
+// RECEBER PCM
+// ==========================================================
 
-/*
-====================================
-CAPTURA ELECTRON
-====================================
-*/
+function receberPCM(
+    dados
+) {
+
+    if (
+        !audioNativoAtivo
+    ) {
+
+        return;
+
+    }
+
+
+    let bytes;
+
+
+    if (
+        dados instanceof Uint8Array
+    ) {
+
+        bytes =
+            dados;
+
+    }
+    else if (
+        dados
+        &&
+        dados.buffer
+    ) {
+
+        bytes =
+            new Uint8Array(
+                dados.buffer,
+                dados.byteOffset || 0,
+                dados.byteLength || dados.length
+            );
+
+    }
+    else {
+
+        bytes =
+            new Uint8Array(
+                dados
+            );
+
+    }
+
+
+    if (
+        restoPCM.length > 0
+    ) {
+
+        const combinado =
+            new Uint8Array(
+                restoPCM.length
+                +
+                bytes.length
+            );
+
+
+        combinado.set(
+            restoPCM,
+            0
+        );
+
+
+        combinado.set(
+            bytes,
+            restoPCM.length
+        );
+
+
+        bytes =
+            combinado;
+
+
+        restoPCM =
+            new Uint8Array(0);
+
+    }
+
+
+    const bytesPorFrame =
+        4;
+
+
+    const tamanhoUtil =
+        bytes.length
+        -
+        (
+            bytes.length
+            %
+            bytesPorFrame
+        );
+
+
+    if (
+        tamanhoUtil < bytes.length
+    ) {
+
+        restoPCM =
+            bytes.slice(
+                tamanhoUtil
+            );
+
+    }
+
+
+    if (
+        tamanhoUtil === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const quantidadeFrames =
+        tamanhoUtil
+        /
+        bytesPorFrame;
+
+
+    const esquerda =
+        new Float32Array(
+            quantidadeFrames
+        );
+
+
+    const direita =
+        new Float32Array(
+            quantidadeFrames
+        );
+
+
+    const view =
+        new DataView(
+            bytes.buffer,
+            bytes.byteOffset,
+            tamanhoUtil
+        );
+
+
+    for (
+        let i = 0;
+        i < quantidadeFrames;
+        i++
+    ) {
+
+        const offset =
+            i * 4;
+
+
+        const amostraEsquerda =
+            view.getInt16(
+                offset,
+                true
+            );
+
+
+        const amostraDireita =
+            view.getInt16(
+                offset + 2,
+                true
+            );
+
+
+        esquerda[i] =
+            amostraEsquerda
+            /
+            32768;
+
+
+        direita[i] =
+            amostraDireita
+            /
+            32768;
+
+    }
+
+
+    filaAudio.push({
+
+        esquerda:
+            esquerda,
+
+        direita:
+            direita,
+
+        offset:
+            0
+
+    });
+
+
+    amostrasNaFila +=
+        quantidadeFrames;
+
+
+    /*
+    Evita que um atraso grande acumule
+    vários segundos de áudio.
+    */
+
+    if (
+        amostrasNaFila >
+        96000
+    ) {
+
+        while (
+            filaAudio.length > 0
+            &&
+            amostrasNaFila >
+            48000
+        ) {
+
+            const antigo =
+                filaAudio.shift();
+
+
+            amostrasNaFila -=
+                antigo.esquerda.length
+                -
+                antigo.offset;
+
+        }
+
+    }
+
+}
+
+
+// ==========================================================
+// PROCESSADOR WEB AUDIO
+// ==========================================================
+
+function processarAudio(
+    evento
+) {
+
+    const saidaEsquerda =
+        evento.outputBuffer
+            .getChannelData(0);
+
+
+    const saidaDireita =
+        evento.outputBuffer
+            .getChannelData(1);
+
+
+    saidaEsquerda.fill(
+        0
+    );
+
+
+    saidaDireita.fill(
+        0
+    );
+
+
+    let posicaoSaida =
+        0;
+
+
+    while (
+        posicaoSaida <
+            saidaEsquerda.length
+        &&
+        filaAudio.length >
+            0
+    ) {
+
+        const bloco =
+            filaAudio[0];
+
+
+        const disponivel =
+            bloco.esquerda.length
+            -
+            bloco.offset;
+
+
+        const necessario =
+            saidaEsquerda.length
+            -
+            posicaoSaida;
+
+
+        const copiar =
+            Math.min(
+                disponivel,
+                necessario
+            );
+
+
+        saidaEsquerda.set(
+            bloco.esquerda.subarray(
+                bloco.offset,
+                bloco.offset + copiar
+            ),
+            posicaoSaida
+        );
+
+
+        saidaDireita.set(
+            bloco.direita.subarray(
+                bloco.offset,
+                bloco.offset + copiar
+            ),
+            posicaoSaida
+        );
+
+
+        bloco.offset +=
+            copiar;
+
+
+        posicaoSaida +=
+            copiar;
+
+
+        amostrasNaFila -=
+            copiar;
+
+
+        if (
+            bloco.offset >=
+            bloco.esquerda.length
+        ) {
+
+            filaAudio.shift();
+
+        }
+
+    }
+
+}
+
+
+// ==========================================================
+// PREPARAR ÁUDIO NATIVO
+// ==========================================================
+
+async function iniciarAudioNativo() {
+
+    await encerrarAudioNativo(
+        true
+    );
+
+
+    audioNativoAtivo =
+        true;
+
+
+    filaAudio =
+        [];
+
+
+    amostrasNaFila =
+        0;
+
+
+    restoPCM =
+        new Uint8Array(0);
+
+
+    const AudioContextClasse =
+        window.AudioContext
+        ||
+        window.webkitAudioContext;
+
+
+    audioContextNativo =
+        new AudioContextClasse({
+
+            sampleRate:
+                48000
+
+        });
+
+
+    audioDestino =
+        audioContextNativo
+            .createMediaStreamDestination();
+
+
+    /*
+    ScriptProcessor é usado aqui como ponte
+    PCM -> MediaStream.
+    */
+
+    audioProcessor =
+        audioContextNativo
+            .createScriptProcessor(
+                2048,
+                0,
+                2
+            );
+
+
+    audioProcessor.onaudioprocess =
+        processarAudio;
+
+
+    /*
+    Saída usada pelo WebRTC.
+    */
+
+    audioProcessor.connect(
+        audioDestino
+    );
+
+
+    /*
+    Também conectamos ao contexto local com
+    ganho zero para manter o processador ativo,
+    sem reproduzir som no computador.
+    */
+
+    audioGanhoMudo =
+        audioContextNativo
+            .createGain();
+
+
+    audioGanhoMudo.gain.value =
+        0;
+
+
+    audioProcessor.connect(
+        audioGanhoMudo
+    );
+
+
+    audioGanhoMudo.connect(
+        audioContextNativo.destination
+    );
+
+
+    removerListenerPCM =
+        window.electronAPI
+            .aoReceberAudioPCM(
+                receberPCM
+            );
+
+
+    removerListenerErro =
+        window.electronAPI
+            .aoErroAudio(
+                mensagem => {
+
+                    console.error(
+                        "Erro no áudio nativo:",
+                        mensagem
+                    );
+
+
+                    if (
+                        souTransmissor
+                    ) {
+
+                        statusTexto.innerText =
+                            "⚠️ Vídeo transmitindo, mas ocorreu um erro no áudio.";
+
+                    }
+
+                }
+            );
+
+
+    removerListenerEncerrado =
+        window.electronAPI
+            .aoEncerrarAudio(
+                codigo => {
+
+                    console.log(
+                        "Captura de áudio encerrada:",
+                        codigo
+                    );
+
+
+                    if (
+                        audioNativoAtivo
+                        &&
+                        souTransmissor
+                    ) {
+
+                        statusTexto.innerText =
+                            "⚠️ A captura de áudio do aplicativo foi encerrada.";
+
+                    }
+
+                }
+            );
+
+
+    await audioContextNativo.resume();
+
+
+    const resultado =
+        await window
+            .electronAPI
+            .iniciarAudioAplicativo();
+
+
+    if (
+        !resultado
+        ||
+        !resultado.ok
+    ) {
+
+        const mensagem =
+            resultado
+            &&
+            resultado.erro
+                ? resultado.erro
+                : "Não foi possível iniciar o áudio.";
+
+
+        console.error(
+            mensagem
+        );
+
+
+        await encerrarAudioNativo(
+            true
+        );
+
+
+        return {
+
+            ok:
+                false,
+
+            erro:
+                mensagem
+
+        };
+
+    }
+
+
+    audioTrackNativo =
+        audioDestino
+            .stream
+            .getAudioTracks()[0];
+
+
+    if (
+        !audioTrackNativo
+    ) {
+
+        await encerrarAudioNativo(
+            true
+        );
+
+
+        return {
+
+            ok:
+                false,
+
+            erro:
+                "A faixa de áudio não foi criada."
+
+        };
+
+    }
+
+
+    audioTrackNativo.enabled =
+        true;
+
+
+    console.log(
+        "Áudio exclusivo iniciado para PID:",
+        resultado.pid
+    );
+
+
+    return {
+
+        ok:
+            true,
+
+        track:
+            audioTrackNativo,
+
+        pid:
+            resultado.pid,
+
+        nome:
+            resultado.nome
+
+    };
+
+}
+
+
+// ==========================================================
+// ENCERRAR ÁUDIO NATIVO
+// ==========================================================
+
+async function encerrarAudioNativo(
+    pararHelper = true
+) {
+
+    audioNativoAtivo =
+        false;
+
+
+    if (
+        removerListenerPCM
+    ) {
+
+        removerListenerPCM();
+
+        removerListenerPCM =
+            null;
+
+    }
+
+
+    if (
+        removerListenerErro
+    ) {
+
+        removerListenerErro();
+
+        removerListenerErro =
+            null;
+
+    }
+
+
+    if (
+        removerListenerEncerrado
+    ) {
+
+        removerListenerEncerrado();
+
+        removerListenerEncerrado =
+            null;
+
+    }
+
+
+    if (
+        audioProcessor
+    ) {
+
+        try {
+
+            audioProcessor.disconnect();
+
+        }
+        catch {
+        }
+
+
+        audioProcessor.onaudioprocess =
+            null;
+
+
+        audioProcessor =
+            null;
+
+    }
+
+
+    if (
+        audioGanhoMudo
+    ) {
+
+        try {
+
+            audioGanhoMudo.disconnect();
+
+        }
+        catch {
+        }
+
+
+        audioGanhoMudo =
+            null;
+
+    }
+
+
+    if (
+        audioDestino
+    ) {
+
+        try {
+
+            audioDestino.disconnect();
+
+        }
+        catch {
+        }
+
+
+        audioDestino =
+            null;
+
+    }
+
+
+    if (
+        audioTrackNativo
+    ) {
+
+        try {
+
+            audioTrackNativo.stop();
+
+        }
+        catch {
+        }
+
+
+        audioTrackNativo =
+            null;
+
+    }
+
+
+    filaAudio =
+        [];
+
+
+    amostrasNaFila =
+        0;
+
+
+    restoPCM =
+        new Uint8Array(0);
+
+
+    if (
+        audioContextNativo
+    ) {
+
+        try {
+
+            await audioContextNativo.close();
+
+        }
+        catch {
+        }
+
+
+        audioContextNativo =
+            null;
+
+    }
+
+
+    if (
+        pararHelper
+        &&
+        estouNoElectron
+        &&
+        window.electronAPI
+            .pararAudioAplicativo
+    ) {
+
+        try {
+
+            await window
+                .electronAPI
+                .pararAudioAplicativo();
+
+        }
+        catch (
+            erro
+        ) {
+
+            console.log(
+                "Erro ao parar áudio:",
+                erro
+            );
+
+        }
+
+    }
+
+}
+
+
+// ==========================================================
+// CAPTURA ELECTRON
+// ==========================================================
 
 async function iniciarElectron() {
 
@@ -930,10 +1778,7 @@ async function iniciarElectron() {
 
 
         const usarAudio =
-            document
-                .getElementById(
-                    "usarAudio"
-                )
+            usarAudioCheckbox
                 .checked;
 
 
@@ -948,6 +1793,13 @@ async function iniciarElectron() {
                 ? 1080
                 : 720;
 
+
+        /*
+        No Electron, o getDisplayMedia pega
+        SOMENTE vídeo.
+
+        O áudio vem do helper nativo.
+        */
 
         streamLocal =
             await navigator
@@ -977,19 +1829,107 @@ async function iniciarElectron() {
                     },
 
                     audio:
-                        usarAudio
+                        false
 
                 });
+
+
+        /*
+        Se o usuário marcou áudio,
+        inicia a captura exclusiva.
+        */
+
+        if (
+            usarAudio
+        ) {
+
+            if (
+                fonteEscolhida
+                &&
+                String(
+                    fonteEscolhida.id
+                ).startsWith(
+                    "window:"
+                )
+            ) {
+
+                statusTexto.innerText =
+                    "🔊 Iniciando áudio do aplicativo...";
+
+
+                const audio =
+                    await iniciarAudioNativo();
+
+
+                if (
+                    audio.ok
+                    &&
+                    audio.track
+                ) {
+
+                    streamLocal.addTrack(
+                        audio.track
+                    );
+
+
+                    console.log(
+                        "Faixa de áudio adicionada ao MediaStream."
+                    );
+
+                }
+                else {
+
+                    statusTexto.innerText =
+                        "⚠️ Compartilhando vídeo sem áudio: "
+                        +
+                        audio.erro;
+
+                }
+
+            }
+            else {
+
+                statusTexto.innerText =
+                    "⚠️ Áudio exclusivo exige uma janela de aplicativo.";
+
+            }
+
+        }
 
 
         await prepararTransmissao();
 
     }
-    catch (erro) {
+    catch (
+        erro
+    ) {
 
         console.error(
             erro
         );
+
+
+        await encerrarAudioNativo(
+            true
+        );
+
+
+        if (
+            streamLocal
+        ) {
+
+            streamLocal
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+
+            streamLocal =
+                null;
+
+        }
 
 
         statusTexto.innerText =
@@ -1000,12 +1940,9 @@ async function iniciarElectron() {
 }
 
 
-
-/*
-====================================
-CAPTURA PELO NAVEGADOR
-====================================
-*/
+// ==========================================================
+// CAPTURA PELO NAVEGADOR
+// ==========================================================
 
 async function compartilharNavegador() {
 
@@ -1047,7 +1984,9 @@ async function compartilharNavegador() {
         await prepararTransmissao();
 
     }
-    catch (erro) {
+    catch (
+        erro
+    ) {
 
         console.error(
             erro
@@ -1062,12 +2001,9 @@ async function compartilharNavegador() {
 }
 
 
-
-/*
-====================================
-PREPARA TRANSMISSÃO
-====================================
-*/
+// ==========================================================
+// PREPARAR TRANSMISSÃO
+// ==========================================================
 
 async function prepararTransmissao() {
 
@@ -1123,7 +2059,8 @@ async function prepararTransmissao() {
                 if (
                     !parametros.encodings
                     ||
-                    parametros.encodings.length === 0
+                    parametros.encodings.length ===
+                    0
                 ) {
 
                     parametros.encodings =
@@ -1135,7 +2072,7 @@ async function prepararTransmissao() {
                 parametros
                     .encodings[0]
                     .maxBitrate =
-                    8000000;
+                        8000000;
 
 
                 await sender
@@ -1168,8 +2105,17 @@ async function prepararTransmissao() {
         "inline-block";
 
 
+    const temAudio =
+        streamLocal
+            .getAudioTracks()
+            .length >
+        0;
+
+
     statusTexto.innerText =
-        "🟢 Transmitindo";
+        temAudio
+            ? "🟢 Transmitindo vídeo + áudio do aplicativo"
+            : "🟢 Transmitindo vídeo";
 
 
     if (
@@ -1184,12 +2130,9 @@ async function prepararTransmissao() {
 }
 
 
-
-/*
-====================================
-PEER CONNECTION
-====================================
-*/
+// ==========================================================
+// PEER CONNECTION
+// ==========================================================
 
 function criarPeer() {
 
@@ -1248,6 +2191,14 @@ function criarPeer() {
             "inline-block";
 
 
+        video.muted =
+            true;
+
+
+        ativarSom.innerText =
+            "🔇 Mutado";
+
+
         statusTexto.innerText =
             "🟢 Recebendo transmissão";
 
@@ -1281,7 +2232,16 @@ function criarPeer() {
 
             statusTexto.innerText =
                 souTransmissor
-                    ? "🟢 Transmitindo"
+                    ? (
+                        streamLocal
+                        &&
+                        streamLocal
+                            .getAudioTracks()
+                            .length >
+                        0
+                            ? "🟢 Transmitindo vídeo + áudio"
+                            : "🟢 Transmitindo vídeo"
+                    )
                     : "🟢 Conectado";
 
         }
@@ -1302,19 +2262,19 @@ function criarPeer() {
 }
 
 
-
-/*
-====================================
-OFFER
-====================================
-*/
+// ==========================================================
+// OFFER
+// ==========================================================
 
 async function enviarOffer() {
 
     if (
         !peer
-    )
+    ) {
+
         return;
+
+    }
 
 
     const offer =
@@ -1343,12 +2303,9 @@ async function enviarOffer() {
 }
 
 
-
-/*
-====================================
-VIEWER ENTROU
-====================================
-*/
+// ==========================================================
+// VIEWER ENTROU
+// ==========================================================
 
 socket.on(
     "usuario-entrou",
@@ -1370,12 +2327,9 @@ socket.on(
 );
 
 
-
-/*
-====================================
-RECEBER OFFER
-====================================
-*/
+// ==========================================================
+// RECEBER OFFER
+// ==========================================================
 
 socket.on(
     "offer",
@@ -1383,8 +2337,11 @@ socket.on(
 
         if (
             souTransmissor
-        )
+        ) {
+
             return;
+
+        }
 
 
         criarPeer();
@@ -1428,12 +2385,9 @@ socket.on(
 );
 
 
-
-/*
-====================================
-RECEBER ANSWER
-====================================
-*/
+// ==========================================================
+// RECEBER ANSWER
+// ==========================================================
 
 socket.on(
     "answer",
@@ -1441,8 +2395,11 @@ socket.on(
 
         if (
             !peer
-        )
+        ) {
+
             return;
+
+        }
 
 
         await peer
@@ -1459,12 +2416,9 @@ socket.on(
 );
 
 
-
-/*
-====================================
-ICE CANDIDATES
-====================================
-*/
+// ==========================================================
+// ICE
+// ==========================================================
 
 socket.on(
     "ice-candidate",
@@ -1472,8 +2426,11 @@ socket.on(
 
         if (
             !candidate
-        )
+        ) {
+
             return;
+
+        }
 
 
         if (
@@ -1486,6 +2443,7 @@ socket.on(
                 .push(
                     candidate
                 );
+
 
             return;
 
@@ -1502,7 +2460,9 @@ socket.on(
                 );
 
         }
-        catch (erro) {
+        catch (
+            erro
+        ) {
 
             console.error(
                 "ICE:",
@@ -1519,8 +2479,11 @@ async function adicionarPendentes() {
 
     if (
         !peer
-    )
+    ) {
+
         return;
+
+    }
 
 
     for (
@@ -1538,7 +2501,9 @@ async function adicionarPendentes() {
                 );
 
         }
-        catch (erro) {
+        catch (
+            erro
+        ) {
 
             console.error(
                 erro
@@ -1555,18 +2520,28 @@ async function adicionarPendentes() {
 }
 
 
-
-/*
-====================================
-ATIVAR SOM
-====================================
-*/
+// ==========================================================
+// BOTÃO SOM DO VIEWER
+// ==========================================================
 
 ativarSom.onclick =
 async () => {
 
     video.muted =
-        false;
+        !video.muted;
+
+
+    if (
+        video.muted
+    ) {
+
+        ativarSom.innerText =
+            "🔇 Mutado";
+
+
+        return;
+
+    }
 
 
     try {
@@ -1582,29 +2557,45 @@ async () => {
             "🟢 Assistindo transmissão";
 
     }
-    catch (erro) {
+    catch (
+        erro
+    ) {
 
         console.error(
             erro
         );
+
+
+        video.muted =
+            true;
+
+
+        ativarSom.innerText =
+            "🔇 Mutado";
 
     }
 
 };
 
 
-
-/*
-====================================
-PARAR TRANSMISSÃO
-====================================
-*/
+// ==========================================================
+// PARAR TRANSMISSÃO
+// ==========================================================
 
 parar.onclick =
     pararTransmissao;
 
 
-function pararTransmissao() {
+async function pararTransmissao() {
+
+    /*
+    Primeiro para o helper nativo.
+    */
+
+    await encerrarAudioNativo(
+        true
+    );
+
 
     if (
         streamLocal
@@ -1613,8 +2604,17 @@ function pararTransmissao() {
         streamLocal
             .getTracks()
             .forEach(
-                track =>
-                    track.stop()
+                track => {
+
+                    try {
+
+                        track.stop();
+
+                    }
+                    catch {
+                    }
+
+                }
             );
 
 
@@ -1629,6 +2629,7 @@ function pararTransmissao() {
     ) {
 
         peer.close();
+
 
         peer =
             null;
@@ -1680,6 +2681,14 @@ socket.on(
             null;
 
 
+        video.muted =
+            true;
+
+
+        ativarSom.innerText =
+            "🔇 Mutado";
+
+
         statusTexto.innerText =
             "A transmissão foi encerrada.";
 
@@ -1687,12 +2696,9 @@ socket.on(
 );
 
 
-
-/*
-====================================
-TELA CHEIA
-====================================
-*/
+// ==========================================================
+// TELA CHEIA
+// ==========================================================
 
 telaCheia.onclick =
 async () => {
@@ -1707,7 +2713,6 @@ async () => {
                 .requestFullscreen();
 
         }
-
         else if (
             video.webkitRequestFullscreen
         ) {
@@ -1718,7 +2723,9 @@ async () => {
         }
 
     }
-    catch (erro) {
+    catch (
+        erro
+    ) {
 
         console.error(
             erro
@@ -1729,12 +2736,9 @@ async () => {
 };
 
 
-
-/*
-====================================
-FECHAR SELETOR
-====================================
-*/
+// ==========================================================
+// FECHAR SELETOR
+// ==========================================================
 
 document
     .getElementById(
@@ -1747,6 +2751,33 @@ document
         "none";
 
 };
+
+
+// ==========================================================
+// LIMPEZA AO FECHAR
+// ==========================================================
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        if (
+            estouNoElectron
+            &&
+            window.electronAPI
+                .pararAudioAplicativo
+        ) {
+
+            window.electronAPI
+                .pararAudioAplicativo()
+                .catch(
+                    () => {}
+                );
+
+        }
+
+    }
+);
 
 </script>
 

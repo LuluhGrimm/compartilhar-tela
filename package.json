@@ -1,28 +1,29 @@
 {
-  "name": "compartilhar-tela",
-  "version": "1.0.2",
-  "description": "Aplicativo de compartilhamento de tela com WebRTC",
+  "name": "luluhgo",
+  "productName": "LuluhGo",
+  "version": "1.0.0",
+  "description": "LuluhGo - compartilhamento de tela em tempo real com áudio.",
   "main": "electron.js",
+  "author": "Luana Grimm",
+  "license": "MIT",
   "scripts": {
     "start": "node server.js",
-    "electron": ".\\node_modules\\.bin\\electron.cmd .",
-    "dist": "electron-builder"
+    "electron": "electron .",
+    "dist": "electron-builder --win portable nsis"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "electron": "^44.2.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.luluh.compartilhartela",
-    "productName": "Compartilhar Tela",
+    "appId": "com.luanagrimm.luluhgo",
+    "productName": "LuluhGo",
+    "asar": true,
     "directories": {
       "output": "dist"
     },
@@ -33,12 +34,28 @@
       "public/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "audio-capture/build/Release/LuluhGoAudio.exe",
+        "to": "LuluhGoAudio.exe"
+      }
+    ],
     "win": {
       "target": [
-        "nsis",
         "portable",
-        "zip"
-      ]
+        "nsis"
+      ],
+      "artifactName": "LuluhGo Setup ${version}.${ext}",
+      "icon": "public/icon.ico"
+    },
+    "portable": {
+      "artifactName": "LuluhGo.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   }
 }
